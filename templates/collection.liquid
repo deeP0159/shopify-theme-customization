@@ -266,3 +266,59 @@
     }
   }
 </style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const addButtons = document.querySelectorAll('[data-add-to-cart-global]');
+
+    addButtons.forEach((button) => {
+      button.addEventListener('click', function (e) {
+        e.preventDefault();
+
+        // Disable button while adding
+        button.disabled = true;
+        const originalText = button.textContent;
+        button.textContent = 'Adding...';
+
+        const variantId = this.getAttribute('data-add-to-cart-global');
+
+        fetch('/cart/add.js', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            items: [
+              {
+                id: Number(variantId),
+                quantity: 1,
+              },
+            ],
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            // Reset button
+            button.disabled = false;
+            button.textContent = 'Added!';
+
+            setTimeout(() => {
+              button.textContent = originalText;
+            }, 2000);
+
+            // Update cart and open drawer
+            window.dispatchEvent(new CustomEvent('cart:updated', { detail: data }));
+            if (window.openCartDrawer) {
+              window.openCartDrawer();
+            }
+          })
+          .catch((error) => {
+            console.error('Error adding to cart:', error);
+            button.disabled = false;
+            button.textContent = originalText;
+            alert('Error adding item to cart.');
+          });
+      });
+    });
+  });
+</script>

@@ -3,11 +3,11 @@
  * Initializes cart drawer and handles global cart functionality
  */
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   console.log('Theme. js loaded');
 
   // Cart drawer management
-  window.openCartDrawer = function() {
+  window.openCartDrawer = function () {
     const drawer = document.querySelector('[data-cart-drawer]');
     if (drawer) {
       drawer.classList.add('is-open');
@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.body.style.overflow = 'hidden';
   };
 
-  window.closeCartDrawer = function() {
+  window.closeCartDrawer = function () {
     const drawer = document.querySelector('[data-cart-drawer]');
     if (drawer) {
       drawer.classList.remove('is-open');
@@ -32,8 +32,8 @@ document.addEventListener('DOMContentLoaded', function() {
   };
 
   // Cart icon update
-  window.addEventListener('cart:updated', function(e) {
-    const cartCount = e.detail?. item_count || 0;
+  window.addEventListener('cart:updated', function (e) {
+    const cartCount = e.detail?.item_count || 0;
     const cartCountElement = document.querySelector('[data-cart-count]');
     if (cartCountElement) {
       cartCountElement.textContent = cartCount;

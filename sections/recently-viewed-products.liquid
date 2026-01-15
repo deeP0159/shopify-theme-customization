@@ -347,7 +347,7 @@
         .then((response) => response.json())
         .then((data) => {
           console.log('Added to cart:', data);
-          window.dispatchEvent(new CustomEvent('cart: updated', { detail: data }));
+          window.dispatchEvent(new CustomEvent('cart:updated', { detail: data }));
           if (window.openCartDrawer) {
             window.openCartDrawer();
           }
