@@ -1,0 +1,229 @@
+<main class="product-main">
+  <section class="product-section">
+    <div class="product-container">
+      <div class="product-gallery">
+        {% if product.images.size > 0 %}
+          {%- assign featured = product.featured_image | default: product.images.first -%}
+          <div class="product-image-main">
+            <img
+              src="{{ featured | image_url: width: 900 }}"
+              alt="{{ featured.alt | default: product.title }}"
+              data-product-image
+              loading="lazy"
+              width="300"
+              height="300"
+            >
+          </div>
+
+          {% if product.images.size > 1 %}
+            <div class="product-thumbs">
+              {% for img in product.images %}
+                <button class="thumb" type="button" data-thumb-src="{{ img | image_url: width: 600 }}">
+                  <img
+                    src="{{ img | image_url: width: 120 }}"
+                    alt="{{ img.alt | default: product.title }}"
+                    width="120"
+                    height="120"
+                  >
+                </button>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% else %}
+          <!-- fallback placeholder -->
+          <div class="product-image-main">
+            <img src="https://via.placeholder.com/300" alt="No image available" loading="lazy" width="300" height="300">
+          </div>
+        {% endif %}
+      </div>
+      <div class="product-details">
+        <h1 class="product-title">{{ product.title }}</h1>
+
+        <div class="product-price" data-price>
+          {% if product.compare_at_price %}
+            <span class="original-price">${{ product.compare_at_price | money }}</span>
+          {% endif %}
+          <span class="current-price">${{ product.price | money }}</span>
+        </div>
+
+        <p class="product-description">{{ product.description }}</p>
+
+        <form class="product-form" method="POST" action="/cart/add">
+          <input type="hidden" name="id" value="{{ product.variants. first.id }}">
+          <button type="submit" class="add-to-cart-primary">Add to Cart</button>
+        </form>
+
+        <div class="product-details-meta">
+          <p><strong>SKU:</strong> {{ product.selected_or_first_available_variant.sku }}</p>
+          <p>
+            <strong>Availability:</strong>
+            {% if product.available %}
+              <span style="color: #4caf50;">In Stock</span>
+            {% else %}
+              <span style="color: #d32f2f;">Out of Stock</span>
+            {% endif %}
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {% section 'recently-viewed-products' %}
+</main>
+
+<style>
+  .product-main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+
+  .product-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    margin-bottom: 3rem;
+  }
+
+  @media (max-width: 768px) {
+    .product-container {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+  }
+
+  .product-gallery {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .product-gallery img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    object-fit: cover;
+  }
+
+  .product-details {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .product-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    line-height: 1.2;
+  }
+
+  .product-price {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  .original-price {
+    text-decoration: line-through;
+    color: #999;
+    font-size: 1.2rem;
+  }
+
+  .current-price {
+    color: #000;
+  }
+
+  .product-description {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+  }
+
+  .product-form {
+    margin-bottom: 2rem;
+  }
+
+  .add-to-cart-primary {
+    width: 100%;
+    padding: 1rem;
+    background: #000;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  .add-to-cart-primary:hover {
+    background: #333;
+  }
+
+  .product-details-meta {
+    padding-top: 2rem;
+    border-top: 1px solid #e0e0e0;
+    color: #666;
+  }
+
+  .product-details-meta p {
+    margin-bottom: 0.5rem;
+  }
+</style>
+
+<script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Track product view for Recently Viewed Products
+       const productData = {
+    handle: '{{ product.handle }}',
+    id: {{ product.selected_or_first_available_variant.id }},
+    title: '{{ product.title | escape }}',
+    price: '{{ product.price | money }}',
+    image: '{{ product.featured_image | image_url: width: 300 }}'
+  };
+
+
+        console.log('Product page loaded, tracking:', productData);
+
+        // Add to recently viewed
+        if (window.recentlyViewedManager) {
+          window.recentlyViewedManager.addViewedProduct(productData);
+        }
+
+        // Form submission
+        const form = document.querySelector('.product-form');
+        if (form) {
+          form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const variantId = parseInt(form.querySelector('input[name="id"]').value);
+            console.log('Adding to cart:', variantId);
+
+            fetch('/cart/add.js', {
+              method: 'POST',
+              headers:  {
+                'Content-Type':  'application/json',
+              },
+              body: JSON.stringify({
+                items: [{
+                  id: variantId,
+                  quantity: 1
+                }]
+              })
+            })
+            .then(response => response.json())
+            .then(data => {
+              console.log('Cart updated:', data);
+              window.dispatchEvent(new CustomEvent('cart:updated', { detail: data }));
+              if (window. openCartDrawer) {
+                window.openCartDrawer();
+              }
+            })
+            .catch(error => console.error('Error:', error));
+          });
+        }
+      });
+</script>

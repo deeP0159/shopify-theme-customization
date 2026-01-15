@@ -1,0 +1,367 @@
+{%- comment -%}
+  Recently Viewed Products Section
+  Displays the last 5 viewed products in a slider/carousel
+  Stores viewed products in localStorage for persistence
+{%- endcomment -%}
+
+<div class="recently-viewed-container">
+  <div class="recently-viewed-wrapper">
+    <h2 class="recently-viewed-title">Recently Viewed Products</h2>
+
+    <div class="recently-viewed-carousel" data-recently-viewed-carousel>
+      <div class="carousel-track" data-carousel-track>
+        {%- comment -%} Products will be dynamically inserted here {%- endcomment -%}
+      </div>
+
+      <button class="carousel-button carousel-button--prev" data-carousel-prev aria-label="Previous products">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      </button>
+
+      <button class="carousel-button carousel-button--next" data-carousel-next aria-label="Next products">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  :root {
+    --rv-card-width: 220px; /* adjust to show more/less cards in viewport */
+    --rv-card-height: 340px; /* total card height */
+    --rv-image-height: 180px; /* image area height inside card */
+    --rv-gap: 1.25rem;
+  }
+
+  .recently-viewed-container {
+    margin: 2.5rem 0;
+    padding: 0 1rem;
+    background: #fafafa;
+    padding-top: 1.75rem;
+    padding-bottom: 1.75rem;
+  }
+
+  .recently-viewed-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .recently-viewed-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    padding-left: 0.25rem;
+  }
+
+  .recently-viewed-carousel {
+    position: relative;
+    overflow: visible;
+  }
+
+  .carousel-track {
+    display: flex;
+    gap: var(--rv-gap);
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    padding: 0 0.5rem;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    align-items: start; /* keep items aligned at top baseline */
+  }
+
+  .carousel-track::-webkit-scrollbar {
+    height: 8px;
+  }
+  .carousel-track::-webkit-scrollbar-thumb {
+    background: #d0d0d0;
+    border-radius: 8px;
+  }
+
+  /* Card: fixed width, fixed height, column layout */
+  .carousel-product {
+    flex: 0 0 var(--rv-card-width);
+    width: var(--rv-card-width);
+    height: var(--rv-card-height);
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #eee;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  }
+
+  /* Image area: fixed height, image uses object-fit: cover */
+  .product-image-wrapper {
+    height: var(--rv-image-height);
+    width: 100%;
+    background: #f0f0f0;
+    position: relative;
+    flex: 0 0 auto;
+  }
+
+  .product-image-wrapper img,
+  .product-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* Info area: flexible, keeps button at bottom */
+  .product-info {
+    display: flex;
+    flex-direction: column;
+    padding: 0.75rem;
+    gap: 0.5rem;
+    flex: 1 1 auto;
+    min-height: 0; /* allow flex children to shrink properly */
+  }
+
+  .product-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #111;
+    margin: 0;
+    line-height: 1.2;
+    /* clamp to 2 lines */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .product-price {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #222;
+    margin-top: 4px;
+  }
+
+  /* Keep button at the bottom of the card */
+  .add-to-cart-button {
+    margin-top: auto;
+    align-self: stretch;
+    padding: 0.55rem 0.6rem;
+    background: #000;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.18s ease, transform 0.12s ease;
+  }
+  .add-to-cart-button:hover {
+    background: #222;
+    transform: translateY(-2px);
+  }
+
+  /* Empty message centered with same visual rhythm */
+  .empty-message {
+    text-align: center;
+    padding: 2.25rem 1rem;
+    color: #888;
+    font-size: 0.95rem;
+    width: 100%;
+  }
+
+  /* Buttons (prev/next) */
+  .carousel-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.72);
+    color: #fff;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    cursor: pointer;
+  }
+  .carousel-button--prev {
+    left: 8px;
+  }
+  .carousel-button--next {
+    right: 8px;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 1100px) {
+    :root {
+      --rv-card-width: 200px;
+      --rv-image-height: 160px;
+      --rv-card-height: 310px;
+    }
+  }
+  @media (max-width: 840px) {
+    :root {
+      --rv-card-width: 170px;
+      --rv-image-height: 140px;
+      --rv-card-height: 280px;
+    }
+  }
+  @media (max-width: 480px) {
+    :root {
+      --rv-card-width: 140px;
+      --rv-image-height: 120px;
+      --rv-card-height: 260px;
+    }
+    .carousel-button {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  // Initialize Recently Viewed Products Manager
+  window.recentlyViewedManager = {
+    storageKey: 'shopify_recently_viewed_products',
+    maxProducts: 5,
+
+    init() {
+      console.log('Initializing Recently Viewed Manager');
+      this.initCarousel();
+      this.renderProducts();
+      this.setupAddToCartHandlers();
+    },
+
+    initCarousel() {
+      const carousel = document.querySelector('[data-carousel-track]');
+      if (!carousel) return;
+
+      const prevBtn = document.querySelector('[data-carousel-prev]');
+      const nextBtn = document.querySelector('[data-carousel-next]');
+
+      if (prevBtn && nextBtn) {
+        prevBtn.addEventListener('click', () => this.scrollCarousel(-280));
+        nextBtn.addEventListener('click', () => this.scrollCarousel(280));
+      }
+    },
+
+    scrollCarousel(distance) {
+      const track = document.querySelector('[data-carousel-track]');
+      if (track) {
+        track.scrollBy({
+          left: distance,
+          behavior: 'smooth',
+        });
+      }
+    },
+
+    addViewedProduct(product) {
+      console.log('Adding viewed product:', product);
+      let viewed = this.getViewedProducts();
+
+      // Remove product if it already exists
+      viewed = viewed.filter((p) => p.handle !== product.handle);
+
+      // Add the product to the beginning
+      viewed.unshift(product);
+
+      // Keep only the last 5 products
+      viewed = viewed.slice(0, this.maxProducts);
+
+      // Save to localStorage
+      localStorage.setItem(this.storageKey, JSON.stringify(viewed));
+      console.log('Saved to localStorage:', viewed);
+
+      // Update the display
+      this.renderProducts();
+    },
+
+    getViewedProducts() {
+      const data = localStorage.getItem(this.storageKey);
+      return data ? JSON.parse(data) : [];
+    },
+
+    renderProducts() {
+      const products = this.getViewedProducts();
+      const track = document.querySelector('[data-carousel-track]');
+
+      if (!track) return;
+
+      console.log('Rendering products:', products);
+
+      if (products.length === 0) {
+        track.innerHTML = '<div class="empty-message">No recently viewed products yet. </div>';
+        return;
+      }
+
+      const html = products
+        .map(
+          (product) => `
+        <div class="carousel-product" data-product-id="${product.id}">
+          <div class="product-image-wrapper">
+            <img src="${product.image}" alt="${product.title}" class="product-image" loading="lazy">
+          </div>
+          <div class="product-info">
+            <h3 class="product-title">${product.title}</h3>
+            <p class="product-price">${product.price}</p>
+            <button class="add-to-cart-button" data-add-to-cart="${product.id}">Add to Cart</button>
+          </div>
+        </div>
+      `
+        )
+        .join('');
+
+      track.innerHTML = html;
+      this.setupAddToCartHandlers();
+    },
+
+    setupAddToCartHandlers() {
+      const buttons = document.querySelectorAll('[data-add-to-cart]');
+      buttons.forEach((button) => {
+        button.addEventListener('click', (e) => {
+          e.preventDefault();
+          const productId = button.getAttribute('data-add-to-cart');
+          this.addToCart(productId);
+        });
+      });
+    },
+
+    addToCart(productId) {
+      console.log('Adding to cart:', productId);
+      fetch('/cart/add.js', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          items: [
+            {
+              id: productId,
+              quantity: 1,
+            },
+          ],
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log('Added to cart:', data);
+          window.dispatchEvent(new CustomEvent('cart: updated', { detail: data }));
+          if (window.openCartDrawer) {
+            window.openCartDrawer();
+          }
+        })
+        .catch((error) => console.error('Error adding to cart:', error));
+    },
+  };
+
+  // Initialize on DOM ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () {
+      window.recentlyViewedManager.init();
+    });
+  } else {
+    window.recentlyViewedManager.init();
+  }
+</script>

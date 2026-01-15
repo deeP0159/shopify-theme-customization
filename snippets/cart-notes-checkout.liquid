@@ -1,0 +1,46 @@
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Retrieve and display cart notes at checkout
+    const cartNotes = JSON.parse(sessionStorage.getItem('cart_notes') || '{}');
+    
+    // Display notes information
+    if (Object.keys(cartNotes).length > 0) {
+      const notesInfo = document.createElement('div');
+      notesInfo.className = 'checkout-notes-info';
+      notesInfo.innerHTML = '<h3>Order Notes</h3>';
+      
+      Object.entries(cartNotes).forEach(([key, note]) => {
+        if (note. trim()) {
+          notesInfo. innerHTML += `<p><strong>Item ${key}:</strong> ${note}</p>`;
+        }
+      });
+      
+      // Append to checkout form
+      const checkoutForm = document.querySelector('form');
+      if (checkoutForm) {
+        checkoutForm.insertBefore(notesInfo, checkoutForm.firstChild);
+      }
+    }
+  });
+</script>
+
+<style>
+  .checkout-notes-info {
+    background: #f5f5f5;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    border:  1px solid #e0e0e0;
+  }
+
+  .checkout-notes-info h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+  }
+
+  . checkout-notes-info p {
+    margin:  0.5rem 0;
+    line-height: 1.6;
+  }
+</style>

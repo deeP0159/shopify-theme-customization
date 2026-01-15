@@ -1,0 +1,19 @@
+[
+  {
+    "name": "Theme Settings",
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "enable_recently_viewed",
+        "label":  "Enable Recently Viewed Products",
+        "default": true
+      },
+      {
+        "type":  "checkbox",
+        "id": "enable_cart_notes",
+        "label": "Enable Cart Notes",
+        "default": true
+      }
+    ]
+  }
+]

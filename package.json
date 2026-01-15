@@ -1,0 +1,16 @@
+{
+  "name": "shopify-theme-customization",
+  "version": "1.0.0",
+  "description": "Advanced Shopify theme with Recently Viewed Products and Cart Notes",
+  "main": "assets/theme.js",
+  "scripts": {
+    "dev":  "shopify theme dev",
+    "serve": "shopify theme serve",
+    "push": "shopify theme push",
+    "pull": "shopify theme pull"
+  },
+  "keywords": ["shopify", "theme", "liquid"],
+  "author": "deeP0159",
+  "license": "MIT",
+  "devDependencies": {}
+}

@@ -1,0 +1,588 @@
+{%- comment -%}
+Enhanced Cart Drawer with Line Item Notes
+Allows per-item notes (gift message, engraving, etc.)
+Updates notes in real-time without page reload
+{%- endcomment -%}
+
+<div class="cart-drawer-overlay" data-cart-overlay></div>
+
+<div class="cart-drawer" data-cart-drawer>
+  <div class="cart-drawer-header">
+    <h2 class="cart-drawer-title">Shopping Cart</h2>
+    <button class="cart-drawer-close" data-cart-close aria-label="Close cart">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+  </div>
+
+  <div class="cart-drawer-content">
+    <div class="cart-items-container" data-cart-items>
+      {%- comment -%} Cart items will be rendered here {%- endcomment -%}
+    </div>
+  </div>
+
+  <div class="cart-drawer-footer">
+    <div class="cart-summary">
+      <div class="cart-summary-row">
+        <span>Subtotal:</span>
+        <span data-cart-subtotal>$0.00</span>
+      </div>
+      <div class="cart-summary-row">
+        <span>Shipping: </span>
+        <span>Calculated at checkout</span>
+      </div>
+      <div class="cart-summary-row cart-total">
+        <span>Total:</span>
+        <span data-cart-total>$0.00</span>
+      </div>
+    </div>
+    
+    <button class="checkout-button" data-checkout-button>Proceed to Checkout</button>
+    <button class="continue-shopping-button" data-continue-shopping>Continue Shopping</button>
+  </div>
+</div>
+
+<style>
+  .cart-drawer {
+    position: fixed;
+    right: -400px;
+    top: 0;
+    width: 400px;
+    height: 100vh;
+    background: white;
+    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    transition: right 0.3s ease;
+  }
+
+  .cart-drawer. is-open {
+    right: 0;
+  }
+
+  @media (max-width: 768px) {
+    .cart-drawer {
+      width: 100%;
+      right: -100%;
+    }
+  }
+
+  .cart-drawer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right:  0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+  }
+
+  .cart-drawer-overlay.is-open {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .cart-drawer-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .cart-drawer-title {
+    font-size: 1.25rem;
+    font-weight:  600;
+    margin:  0;
+  }
+
+  .cart-drawer-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.3s ease;
+  }
+
+  .cart-drawer-close:hover {
+    color: #666;
+  }
+
+  .cart-drawer-content {
+    flex: 1;
+    overflow-y: auto;
+    padding:  1rem;
+  }
+
+  .cart-items-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .empty-cart-message {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: #666;
+  }
+
+  .cart-item {
+    padding: 1rem;
+    border:  1px solid #e0e0e0;
+    border-radius: 8px;
+    background: #fafafa;
+  }
+
+  .cart-item-header {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .cart-item-image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 4px;
+    background: #f5f5f5;
+  }
+
+  .cart-item-details {
+    flex: 1;
+  }
+
+  .cart-item-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    font-size: 0.95rem;
+  }
+
+  . cart-item-price {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .cart-item-quantity {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .quantity-button {
+    background: white;
+    border: 1px solid #ddd;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    transition: background-color 0.3s ease;
+  }
+
+  .quantity-button:hover {
+    background:  #e0e0e0;
+  }
+
+  .quantity-input {
+    width: 40px;
+    text-align: center;
+    border: 1px solid #ddd;
+    border-radius:  4px;
+    padding: 0.25rem;
+    font-size: 0.9rem;
+  }
+
+  .remove-button {
+    background: none;
+    border: none;
+    color: #d32f2f;
+    cursor:  pointer;
+    font-size:  0.85rem;
+    padding: 0;
+    text-decoration: underline;
+    transition: color 0.3s ease;
+  }
+
+  .remove-button:hover {
+    color: #b71c1c;
+  }
+
+  .cart-item-notes {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e0e0e0;
+  }
+
+  .cart-item-notes-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    display: block;
+    color: #333;
+  }
+
+  .cart-item-notes-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 60px;
+    transition: border-color 0.3s ease;
+  }
+
+  .cart-item-notes-input:focus {
+    outline: none;
+    border-color: #000;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+  }
+
+  .notes-placeholder {
+    display: block;
+    font-size: 0.85rem;
+    color: #999;
+    margin-bottom: 0.5rem;
+  }
+
+  .cart-drawer-footer {
+    padding: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    background: #fafafa;
+  }
+
+  .cart-summary {
+    margin-bottom: 1rem;
+  }
+
+  .cart-summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  . cart-summary-row. cart-total {
+    font-size: 1.1rem;
+    font-weight:  600;
+    border-top: 1px solid #ddd;
+    padding-top:  0.5rem;
+  }
+
+  .checkout-button {
+    width: 100%;
+    padding: 0.75rem;
+    background: #000;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 0.5rem;
+    transition: background-color 0.3s ease;
+  }
+
+  .checkout-button:hover {
+    background:  #333;
+  }
+
+  .continue-shopping-button {
+    width: 100%;
+    padding: 0.75rem;
+    background: transparent;
+    color: #000;
+    border: 1px solid #000;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  .continue-shopping-button:hover {
+    background: #f5f5f5;
+  }
+
+  .updating {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  .notes-saved-indicator {
+    font-size: 0.75rem;
+    color: #4caf50;
+    margin-top: 0.25rem;
+    display: none;
+  }
+
+  .notes-saved-indicator.show {
+    display: block;
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const cartDrawerManager = {
+      drawer: document.querySelector('[data-cart-drawer]'),
+      overlay: document.querySelector('[data-cart-overlay]'),
+      itemsContainer: document.querySelector('[data-cart-items]'),
+      notesStorage: 'shopify_cart_item_notes',
+      notesUpdateDelay: null,
+
+      init() {
+        this.setupEventListeners();
+        this.loadCart();
+      },
+
+      setupEventListeners() {
+        // Close drawer
+        document.querySelector('[data-cart-close]')?.addEventListener('click', () => this.closeDrawer());
+        this.overlay?. addEventListener('click', () => this.closeDrawer());
+        document.querySelector('[data-continue-shopping]')?.addEventListener('click', () => this.closeDrawer());
+        document.querySelector('[data-checkout-button]')?.addEventListener('click', () => this.proceedToCheckout());
+
+        // Listen for cart updates
+        window.addEventListener('cart:updated', () => this.loadCart());
+      },
+
+      openDrawer() {
+        this.drawer.classList.add('is-open');
+        this.overlay. classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+      },
+
+      closeDrawer() {
+        this.drawer.classList.remove('is-open');
+        this.overlay.classList.remove('is-open');
+        document.body.style.overflow = '';
+      },
+
+      loadCart() {
+        fetch('/cart. js')
+          .then(response => response.json())
+          .then(data => {
+            this. renderCart(data);
+          })
+          .catch(error => console.error('Error loading cart:', error));
+      },
+
+      renderCart(cart) {
+        if (cart.items.length === 0) {
+          this.itemsContainer.innerHTML = '<div class="empty-cart-message">Your cart is empty</div>';
+          return;
+        }
+
+        const html = cart.items.map(item => this.renderCartItem(item)).join('');
+        this.itemsContainer.innerHTML = html;
+        this.setupItemHandlers();
+        this.updateCartTotals(cart);
+      },
+
+      renderCartItem(item) {
+        const notes = this.getItemNotes(item. key);
+        return `
+          <div class="cart-item" data-cart-item="${item.key}">
+            <div class="cart-item-header">
+              <img src="${item.image}" alt="${item.title}" class="cart-item-image">
+              <div class="cart-item-details">
+                <div class="cart-item-title">${item.title}</div>
+                <div class="cart-item-price">${this.formatPrice(item.price)}</div>
+                <div class="cart-item-quantity">
+                  <button class="quantity-button" data-decrease-quantity="${item.key}">−</button>
+                  <input type="number" class="quantity-input" value="${item.quantity}" min="1" data-quantity-input="${item.key}">
+                  <button class="quantity-button" data-increase-quantity="${item.key}">+</button>
+                  <button class="remove-button" data-remove-item="${item. key}">Remove</button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="cart-item-notes">
+              <label class="cart-item-notes-label">Add a note (gift message, engraving, etc. )</label>
+              <span class="notes-placeholder">Optional:  Add special instructions or gift message</span>
+              <textarea 
+                class="cart-item-notes-input" 
+                data-item-notes="${item.key}"
+                placeholder="Enter your note here..."
+              >${notes}</textarea>
+              <div class="notes-saved-indicator" data-notes-indicator="${item.key}">✓ Note saved</div>
+            </div>
+          </div>
+        `;
+      },
+
+      setupItemHandlers() {
+        // Quantity controls
+        document.querySelectorAll('[data-increase-quantity]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const itemKey = btn.getAttribute('data-increase-quantity');
+            const input = document.querySelector(`[data-quantity-input="${itemKey}"]`);
+            input.value = parseInt(input.value) + 1;
+            this.updateItemQuantity(itemKey, parseInt(input.value));
+          });
+        });
+
+        document.querySelectorAll('[data-decrease-quantity]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const itemKey = btn.getAttribute('data-decrease-quantity');
+            const input = document.querySelector(`[data-quantity-input="${itemKey}"]`);
+            const newQuantity = Math.max(1, parseInt(input.value) - 1);
+            input.value = newQuantity;
+            this.updateItemQuantity(itemKey, newQuantity);
+          });
+        });
+
+        // Remove item
+        document.querySelectorAll('[data-remove-item]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const itemKey = btn.getAttribute('data-remove-item');
+            this.removeItem(itemKey);
+          });
+        });
+
+        // Notes input
+        document.querySelectorAll('[data-item-notes]').forEach(textarea => {
+          textarea.addEventListener('input', (e) => {
+            const itemKey = textarea.getAttribute('data-item-notes');
+            clearTimeout(this.notesUpdateDelay);
+            this.notesUpdateDelay = setTimeout(() => {
+              this.saveItemNotes(itemKey, textarea.value);
+            }, 500);
+          });
+        });
+      },
+
+      updateItemQuantity(itemKey, quantity) {
+        this.drawer.classList.add('updating');
+        fetch('/cart/change. js', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            line: this.getLineNumber(itemKey),
+            quantity: quantity
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          this.loadCart();
+          window.dispatchEvent(new CustomEvent('cart:updated', { detail:  data }));
+        })
+        .catch(error => {
+          console.error('Error updating quantity:', error);
+          this.drawer.classList.remove('updating');
+        });
+      },
+
+      removeItem(itemKey) {
+        this.drawer.classList.add('updating');
+        fetch('/cart/change.js', {
+          method: 'POST',
+          headers:  {
+            'Content-Type':  'application/json',
+          },
+          body: JSON.stringify({
+            line: this.getLineNumber(itemKey),
+            quantity: 0
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          this.loadCart();
+          window.dispatchEvent(new CustomEvent('cart:updated', { detail: data }));
+        })
+        .catch(error => {
+          console.error('Error removing item:', error);
+          this.drawer.classList.remove('updating');
+        });
+      },
+
+      saveItemNotes(itemKey, notes) {
+        const allNotes = this.getAllNotes();
+        allNotes[itemKey] = notes;
+        localStorage.setItem(this.notesStorage, JSON.stringify(allNotes));
+        
+        // Show saved indicator
+        const indicator = document. querySelector(`[data-notes-indicator="${itemKey}"]`);
+        if (indicator) {
+          indicator.classList.add('show');
+          setTimeout(() => {
+            indicator.classList.remove('show');
+          }, 2000);
+        }
+      },
+
+      getItemNotes(itemKey) {
+        const allNotes = this.getAllNotes();
+        return allNotes[itemKey] || '';
+      },
+
+      getAllNotes() {
+        const data = localStorage.getItem(this. notesStorage);
+        return data ? JSON.parse(data) : {};
+      },
+
+      getLineNumber(itemKey) {
+        const item = document.querySelector(`[data-cart-item="${itemKey}"]`);
+        if (! item) return 1;
+        const allItems = document.querySelectorAll('[data-cart-item]');
+        return Array.from(allItems).indexOf(item) + 1;
+      },
+
+      updateCartTotals(cart) {
+        const subtotal = cart. items_subtotal_price / 100;
+        const total = cart.total_price / 100;
+        
+        document.querySelector('[data-cart-subtotal]').textContent = this.formatPrice(cart.items_subtotal_price);
+        document.querySelector('[data-cart-total]').textContent = this.formatPrice(cart.total_price);
+      },
+
+      formatPrice(cents) {
+        return new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: 'USD'
+        }).format(cents / 100);
+      },
+
+      proceedToCheckout() {
+        // Save all notes before checkout
+        const allNotes = this.getAllNotes();
+        if (Object.keys(allNotes).length > 0) {
+          sessionStorage.setItem('cart_notes', JSON.stringify(allNotes));
+        }
+        window.location.href = '/checkout';
+      }
+    };
+
+    cartDrawerManager.init();
+
+    // Global function to open cart drawer
+    window.openCartDrawer = function() {
+      cartDrawerManager.openDrawer();
+    };
+
+    // Sync notes to checkout
+    if (window.location.pathname === '/checkout') {
+      const notes = sessionStorage.getItem('cart_notes');
+      if (notes) {
+        const cartNotes = JSON.parse(notes);
+        // You can process checkout notes here if needed
+        console.log('Cart notes at checkout:', cartNotes);
+      }
+    }
+  });
+</script>

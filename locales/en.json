@@ -1,0 +1,12 @@
+{
+  "general": {
+    "recently_viewed":  "Recently Viewed Products",
+    "cart":  "Shopping Cart",
+    "add_to_cart": "Add to Cart",
+    "remove":  "Remove",
+    "quantity": "Quantity",
+    "notes": "Add a note",
+    "checkout": "Proceed to Checkout",
+    "continue_shopping": "Continue Shopping"
+  }
+}

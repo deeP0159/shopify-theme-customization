@@ -1,0 +1,6 @@
+name = "Custom Shopify Theme"
+description = "Advanced theme with Recently Viewed Products and Cart Notes"
+version = "1.0.0"
+
+[theme]
+  admin_display_name = "Custom Theme"

@@ -1,0 +1,236 @@
+<div class="search-page">
+  <div class="search-header">
+    <h1>Search Results for "{{ search.terms | escape }}"</h1>
+    <p class="result-count">Found {{ search.results_count }} result(s)</p>
+  </div>
+
+  <div class="search-filters">
+    <form method="get" action="/search" class="search-form">
+      <input type="text" name="q" value="{{ search.terms | escape }}" placeholder="Search... ">
+      <button type="submit">Search</button>
+    </form>
+  </div>
+
+  {% if search.results_count > 0 %}
+    <div class="search-results">
+      {% for result in search.results %}
+        {% if result.object_type == 'product' %}
+          <div class="search-result-item product-result">
+            <a href="{{ result.url }}" class="result-image">
+              <img
+                src="{{ result. featured_image | image_url:  width: 150 }}"
+                alt="{{ result.title }}"
+                height="600"
+                width="600"
+              >
+            </a>
+            <div class="result-content">
+              <h3>
+                <a href="{{ result.url }}">{{ result.title }}</a>
+              </h3>
+              <p class="result-price">{{ result.price | money }}</p>
+              <p class="result-description">{{ result.description | strip_html | truncatewords: 20 }}</p>
+              <button class="add-to-cart-btn" data-add-to-cart-global="{{ result.variants. first.id }}">
+                Add to Cart
+              </button>
+            </div>
+          </div>
+        {% elsif result.object_type == 'article' %}
+          <div class="search-result-item article-result">
+            <h3>
+              <a href="{{ result.url }}">{{ result.title }}</a>
+            </h3>
+            <p class="result-excerpt">{{ result.excerpt | strip_html | truncatewords: 30 }}</p>
+            <a href="{{ result.url }}" class="read-more">Read More →</a>
+          </div>
+        {% elsif result.object_type == 'page' %}
+          <div class="search-result-item page-result">
+            <h3>
+              <a href="{{ result.url }}">{{ result.title }}</a>
+            </h3>
+            <p class="result-excerpt">{{ result.content | strip_html | truncatewords: 30 }}</p>
+            <a href="{{ result.url }}" class="read-more">View Page →</a>
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="no-results">
+      <p>Sorry, we couldn't find any results for "{{ search.terms | escape }}"</p>
+      <p>Try searching with different keywords or browse our <a href="/collections/all">collections</a>.</p>
+    </div>
+  {% endif %}
+</div>
+
+<style>
+  .search-page {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .search-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  . search-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .result-count {
+    color: #666;
+    font-size: 1.1rem;
+  }
+
+  .search-filters {
+    margin-bottom: 2rem;
+  }
+
+  .search-form {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .search-form input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+
+  . search-form button {
+    padding: 0.75rem 1.5rem;
+    background: #000;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .search-form button:hover {
+    background: #333;
+  }
+
+  . search-results {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .search-result-item {
+    padding: 1.5rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: #f9f9f9;
+  }
+
+  .product-result {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    gap: 1.5rem;
+  }
+
+  .result-image {
+    display: block;
+    width: 150px;
+    height: 150px;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #e0e0e0;
+  }
+
+  .result-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .result-content h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.25rem;
+  }
+
+  .result-content h3 a {
+    color: #000;
+    text-decoration: none;
+  }
+
+  .result-content h3 a:hover {
+    color: #667eea;
+  }
+
+  .result-price {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #667eea;
+    margin-bottom: 0.5rem;
+  }
+
+  .result-description,
+  .result-excerpt {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+
+  .read-more {
+    color: #667eea;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .read-more:hover {
+    text-decoration: underline;
+  }
+
+  .add-to-cart-btn {
+    padding: 0.5rem 1rem;
+    background: #000;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .add-to-cart-btn:hover {
+    background: #333;
+  }
+
+  .no-results {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #666;
+  }
+
+  . no-results p {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+  }
+
+  . no-results a {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  @media (max-width: 768px) {
+    .product-result {
+      grid-template-columns: 100px 1fr;
+    }
+
+    .result-image {
+      width: 100px;
+      height: 100px;
+    }
+
+    .search-form {
+      flex-direction: column;
+    }
+  }
+</style>
